@@ -6,7 +6,7 @@ flask-mail
 openai
 flask-socketio
 eventlet
-tensorflow==2.10.0
+tensorflow
 joblib
 psycopg2-binary
 requests
