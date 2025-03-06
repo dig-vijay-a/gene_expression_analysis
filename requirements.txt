@@ -10,3 +10,4 @@ tensorflow
 joblib
 psycopg2-binary
 requests
+gunicorn
