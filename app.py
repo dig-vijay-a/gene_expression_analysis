@@ -6,6 +6,8 @@ import jwt
 import datetime
 import bcrypt
 import openai
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import tensorflow as tf
 import joblib
 import requests
