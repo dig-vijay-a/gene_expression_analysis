@@ -4,6 +4,7 @@ flask-sqlalchemy
 flask-jwt-extended
 flask-mail
 openai
+bcrypt
 flask-socketio
 eventlet
 tensorflow
