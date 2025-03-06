@@ -7,7 +7,7 @@ openai
 bcrypt
 flask-socketio
 eventlet
-tensorflow
+tensorflow[AVX2]
 joblib
 psycopg2-binary
 requests
