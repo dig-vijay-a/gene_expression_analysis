@@ -28,4 +28,3 @@ export default function App() {
         </ThemeProvider>
     );
 }
-export defualt App;
