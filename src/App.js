@@ -67,7 +67,6 @@ function App() {
         }
     };
     const [history, setHistory] = useState([]);
-    const [token, setToken] = useState(localStorage.getItem("token"));
 
     // ✅ Fetch Prediction History from API
     const fetchHistory = async () => {
