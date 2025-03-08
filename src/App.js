@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Container, TextField, Button, Typography, Paper, Grid, CircularProgress } from "@mui/material";
+import { Table, TableHead, TableBody, TableRow, TableCell, TableContainer, Paper, Typography } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
 const API_URL = "https://gene-expression-analysis-no5o.onrender.com";
