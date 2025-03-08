@@ -9,5 +9,5 @@ flask-jwt-extended
 flask-bcrypt
 psycopg2-binary
 flask-sqlalchemy
-tenserflow==11.0
+tenserflow
 keras
