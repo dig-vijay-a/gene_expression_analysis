@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import tensorflow as tf
+
 import joblib
 import pandas as pd
 import numpy as np
@@ -9,6 +9,7 @@ import datetime
 from flask_sqlalchemy import SQLAlchemy
 import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+import tensorflow as tf
 
 app = Flask(__name__)
 CORS(app)
