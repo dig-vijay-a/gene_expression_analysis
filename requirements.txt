@@ -5,3 +5,9 @@ numpy
 scikit-learn
 pandas
 gunicorn
+flask-jwt-extended
+flask-bcrypt
+psycopg2-binary
+flask-sqlalchemy
+tensorflow
+keras
