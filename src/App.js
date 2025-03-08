@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Container, TextField, Button, Typography, Paper, Grid, CircularProgress } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
-const API_URL = "https://your-api.onrender.com";
+const API_URL = "https://gene-expression-analysis-no5o.onrender.com";
 
 function App() {
     const [username, setUsername] = useState("");
@@ -66,21 +66,27 @@ function App() {
             setLoading(false);
         }
     };
+    const [history, setHistory] = useState([]);
+    const [token, setToken] = useState(localStorage.getItem("token"));
+
+    // ✅ Fetch Prediction History from API
     const fetchHistory = async () => {
         try {
             const response = await axios.get(`${API_URL}/history`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            setHistory(response.data);
+            setHistory(response.data);  // Store history in state
         } catch (err) {
-            console.error("Error fetching history");
+            console.error("Error fetching history:", err);
         }
     };
 
+    // ✅ Fetch history when user logs in
     useEffect(() => {
-        if (token) fetchHistory();
+        if (token) {
+            fetchHistory();
+        }
     }, [token]);
-
 
 
     return (
@@ -108,11 +114,10 @@ function App() {
                         {prediction && <Typography variant="h6">Prediction: {JSON.stringify(prediction)}</Typography>}
                     </>
                 )}
-            </Paper>
-    <>
-        {history.length > 0 && (
-            <Paper elevation={2} sx={{ p: 3, mt: 3 }}>
-                <Typography variant="h5">Prediction History</Typography>
+<div>
+            <Typography variant="h5">Prediction History</Typography>
+
+            {history.length > 0 ? (
                 <TableContainer component={Paper}>
                     <Table>
                         <TableHead>
@@ -135,20 +140,13 @@ function App() {
                         </TableBody>
                     </Table>
                 </TableContainer>
+            ) : (
+                <Typography>No prediction history available.</Typography>
+            )}
+        </div>
             </Paper>
-        )}
-    </>
-{prediction && (
-    <Paper elevation={2} sx={{ p: 3, mt: 3 }}>
-        <Typography variant="h5">Prediction Results</Typography>
-        <Typography><strong>Deep Learning Model:</strong> {prediction.DeepLearningPrediction}</Typography>
-        <Typography><strong>Confidence Score:</strong> {(prediction.Confidence * 100).toFixed(2)}%</Typography>
-    </Paper>
-)}
-
         </Container>
     );
 }
-
 
 export default App;
