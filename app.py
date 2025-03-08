@@ -7,6 +7,8 @@ import numpy as np
 import jwt
 import datetime
 from flask_sqlalchemy import SQLAlchemy
+import os
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
 app = Flask(__name__)
 CORS(app)
