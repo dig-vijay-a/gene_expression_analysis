@@ -5,6 +5,9 @@ from sklearn.model_selection import train_test_split
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 import os
+from sklearn.preprocessing import StandardScaler
+import joblib
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
 # ✅ Step 1: Load dataset
@@ -38,7 +41,13 @@ print("✅ Model compiled!")
 # ✅ Step 6: Train the model
 print("🚀 Training model... (This may take time)")
 history = model.fit(X_train, y_train, epochs=10, batch_size=16, validation_data=(X_test, y_test))
+# Assume `X_train` is your dataset
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
 
+# Save scaler
+joblib.dump(scaler, "scaler.pkl")
+print("✅ Saved scaler.pkl")
 # ✅ Step 7: Save the model
 print("💾 Saving model...")
 model.save("deep_learning_model.h5")

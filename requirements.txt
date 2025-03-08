@@ -11,3 +11,4 @@ psycopg2-binary
 flask-sqlalchemy
 tensorflow[AVX2]
 keras
+tensorflow[and-cuda]
