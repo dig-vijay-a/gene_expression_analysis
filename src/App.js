@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Table, TableHead, TableBody, TableRow, TableCell, TableContainer, Paper, Typography } from "@mui/material";
-import { TextField, Button, CircularProgress, Typography, Paper, Container } from "@mui/material";
-
+import { TextField, Button, CircularProgress, Container } from "@mui/material";
+import { useCallback } from "react";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
 const API_URL = "https://gene-expression-analysis-no5o.onrender.com";
@@ -14,7 +14,7 @@ function App() {
     const [expressionValues, setExpressionValues] = useState("");
     const [prediction, setPrediction] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+    const [setError] = useState(null);
     const [file, setFile] = useState(null);
 
     const handleAuth = async (endpoint) => {
@@ -70,24 +70,22 @@ function App() {
     };
     const [history, setHistory] = useState([]);
 
-    // ✅ Fetch Prediction History from API
-    const fetchHistory = async () => {
-        try {
-            const response = await axios.get(`${API_URL}/history`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            setHistory(response.data);  // Store history in state
-        } catch (err) {
-            console.error("Error fetching history:", err);
-        }
-    };
 
-    // ✅ Fetch history when user logs in
-    useEffect(() => {
-        if (token) {
-            fetchHistory();
-        }
-    }, [token]);
+
+const fetchHistory = useCallback(async () => {
+    try {
+        const response = await axios.get(`${API_URL}/history`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        setHistory(response.data);
+    } catch (err) {
+        console.error("Error fetching history:", err);
+    }
+}, [token]);  // ✅ Now fetchHistory only updates when token changes
+
+useEffect(() => {
+    fetchHistory();
+}, [fetchHistory]);
 
 
     return (
