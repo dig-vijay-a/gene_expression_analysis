@@ -41,5 +41,5 @@ history = model.fit(X_train, y_train, epochs=10, batch_size=16, validation_data=
 
 # ✅ Step 7: Save the model
 print("💾 Saving model...")
-model.save("deep_model.h5")
+model.save("deep_learning_model.h5")
 print("🎉 Model saved successfully!")
