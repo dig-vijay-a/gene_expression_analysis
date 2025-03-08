@@ -2,19 +2,36 @@ import React, { useState } from "react";
 import axios from "axios";
 import { Container, TextField, Button, Typography, Paper, Grid, CircularProgress } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import { Bar } from "react-chartjs-2";
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from "chart.js";
 
-// Register Chart.js components
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+const API_URL = "https://your-api.onrender.com";
 
 function App() {
+    const [username, setUsername] = useState("");
+    const [password, setPassword] = useState("");
+    const [token, setToken] = useState(localStorage.getItem("token"));
     const [expressionValues, setExpressionValues] = useState("");
     const [prediction, setPrediction] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const [chartData, setChartData] = useState(null);
     const [file, setFile] = useState(null);
+
+    const handleAuth = async (endpoint) => {
+        try {
+            const response = await axios.post(`${API_URL}/${endpoint}`, { username, password });
+            if (endpoint === "login") {
+                localStorage.setItem("token", response.data.token);
+                setToken(response.data.token);
+            }
+            alert(response.data.message || "Login Successful");
+        } catch (err) {
+            alert(err.response.data.error || "Authentication failed");
+        }
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem("token");
+        setToken(null);
+    };
 
     const handleChange = (e) => {
         setExpressionValues(e.target.value);
@@ -28,106 +45,110 @@ function App() {
         setLoading(true);
         setError(null);
         setPrediction(null);
-        setChartData(null);
 
         try {
             let response;
+            const headers = { Authorization: `Bearer ${token}` };
+
             if (file) {
                 const formData = new FormData();
                 formData.append("file", file);
-                response = await axios.post("https://your-api.onrender.com/predict", formData, {
-                    headers: { "Content-Type": "multipart/form-data" },
-                });
+                response = await axios.post(`${API_URL}/predict`, formData, { headers });
             } else {
                 const values = expressionValues.split(",").map(Number);
-                response = await axios.post("https://your-api.onrender.com/predict", {
-                    expression_values: values,
-                });
+                response = await axios.post(`${API_URL}/predict`, { expression_values: values }, { headers });
             }
 
             setPrediction(response.data);
-            if (!file) {
-                setChartData({
-                    labels: expressionValues.split(",").map((_, i) => `Gene ${i + 1}`),
-                    datasets: [
-                        {
-                            label: "Expression Value",
-                            data: expressionValues.split(",").map(Number),
-                            backgroundColor: "rgba(75, 192, 192, 0.6)",
-                        },
-                    ],
-                });
-            }
         } catch (err) {
             setError("Error fetching prediction. Please try again.");
         } finally {
             setLoading(false);
         }
     };
+    const fetchHistory = async () => {
+        try {
+            const response = await axios.get(`${API_URL}/history`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setHistory(response.data);
+        } catch (err) {
+            console.error("Error fetching history");
+        }
+    };
+
+    useEffect(() => {
+        if (token) fetchHistory();
+    }, [token]);
+
+
 
     return (
         <Container maxWidth="md" sx={{ mt: 5 }}>
             <Paper elevation={3} sx={{ p: 4 }}>
-                <Typography variant="h4" gutterBottom align="center">
-                    Gene Expression Disease Predictor
-                </Typography>
+                {!token ? (
+                    <>
+                        <Typography variant="h4" gutterBottom>Login / Register</Typography>
+                        <TextField fullWidth label="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
+                        <TextField fullWidth type="password" label="Password" value={password} onChange={(e) => setPassword(e.target.value)} sx={{ mt: 2 }} />
+                        <Button variant="contained" sx={{ mt: 2 }} onClick={() => handleAuth("register")}>Register</Button>
+                        <Button variant="contained" sx={{ mt: 2, ml: 2 }} onClick={() => handleAuth("login")}>Login</Button>
+                    </>
+                ) : (
+                    <>
+                        <Typography variant="h4">Gene Expression Predictor</Typography>
+                        <Button variant="contained" color="secondary" onClick={handleLogout} sx={{ float: "right" }}>Logout</Button>
 
-                <Grid container spacing={2}>
-                    <Grid item xs={12}>
-                        <TextField
-                            fullWidth
-                            label="Enter Expression Values (comma-separated)"
-                            variant="outlined"
-                            value={expressionValues}
-                            onChange={handleChange}
-                            disabled={file !== null}
-                        />
-                    </Grid>
-
-                    <Grid item xs={12}>
-                        <Button
-                            variant="contained"
-                            component="label"
-                            startIcon={<CloudUploadIcon />}
-                            fullWidth
-                        >
-                            Upload CSV
-                            <input type="file" hidden onChange={handleFileChange} accept=".csv" />
+                        <TextField fullWidth label="Enter Expression Values" value={expressionValues} onChange={handleChange} sx={{ mt: 2 }} />
+                        <Button variant="contained" component="label" startIcon={<CloudUploadIcon />} sx={{ mt: 2 }}>
+                            Upload CSV <input type="file" hidden onChange={handleFileChange} accept=".csv" />
                         </Button>
-                    </Grid>
+                        <Button variant="contained" onClick={handleSubmit} sx={{ mt: 2 }}>{loading ? <CircularProgress size={24} /> : "Predict"}</Button>
 
-                    <Grid item xs={12}>
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            onClick={handleSubmit}
-                            fullWidth
-                            disabled={loading}
-                        >
-                            {loading ? <CircularProgress size={24} /> : "Predict Disease"}
-                        </Button>
-                    </Grid>
-                </Grid>
-
-                {error && <Typography color="error" sx={{ mt: 2 }}>{error}</Typography>}
-
-                {prediction && (
-                    <Paper elevation={2} sx={{ p: 3, mt: 3 }}>
-                        <Typography variant="h5">Prediction Results</Typography>
-                        <Typography><strong>Random Forest:</strong> {prediction.RandomForestPrediction}</Typography>
-                        <Typography><strong>SVM:</strong> {prediction.SVM_Prediction}</Typography>
-                    </Paper>
-                )}
-
-                {chartData && (
-                    <Paper elevation={2} sx={{ p: 3, mt: 3 }}>
-                        <Typography variant="h5">Gene Expression Data</Typography>
-                        <Bar data={chartData} options={{ responsive: true, maintainAspectRatio: false }} />
-                    </Paper>
+                        {prediction && <Typography variant="h6">Prediction: {JSON.stringify(prediction)}</Typography>}
+                    </>
                 )}
             </Paper>
+    <>
+        {history.length > 0 && (
+            <Paper elevation={2} sx={{ p: 3, mt: 3 }}>
+                <Typography variant="h5">Prediction History</Typography>
+                <TableContainer component={Paper}>
+                    <Table>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>Expression Values</TableCell>
+                                <TableCell>Random Forest</TableCell>
+                                <TableCell>SVM</TableCell>
+                                <TableCell>Date</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {history.map((entry, index) => (
+                                <TableRow key={index}>
+                                    <TableCell>{entry.expression_values}</TableCell>
+                                    <TableCell>{entry.RandomForestPrediction}</TableCell>
+                                    <TableCell>{entry.SVM_Prediction}</TableCell>
+                                    <TableCell>{entry.created_at}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            </Paper>
+        )}
+    </>
+{prediction && (
+    <Paper elevation={2} sx={{ p: 3, mt: 3 }}>
+        <Typography variant="h5">Prediction Results</Typography>
+        <Typography><strong>Deep Learning Model:</strong> {prediction.DeepLearningPrediction}</Typography>
+        <Typography><strong>Confidence Score:</strong> {(prediction.Confidence * 100).toFixed(2)}%</Typography>
+    </Paper>
+)}
+
         </Container>
     );
 }
+
 
 export default App;

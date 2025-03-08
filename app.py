@@ -1,48 +1,53 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import tensorflow as tf
 import joblib
 import pandas as pd
 import numpy as np
+import jwt
+import datetime
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
-CORS(app)  # ✅ Allows requests from React
+CORS(app)
 
-# Load trained models
-rf_model = joblib.load("random_forest_model.pkl")
-svm_model = joblib.load("svm_model.pkl")
+app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://users_credentials_user:0Q9mJc17dIZX2zdZ7SXrdE7P1fsLZyOw@dpg-cv5ulfvnoe9s73bobibg-a.oregon-postgres.render.com/users_credentials"
+app.config["SECRET_KEY"] = "SECRET"
+db = SQLAlchemy(app)
+
+# Load Deep Learning Model
+deep_model = tf.keras.models.load_model("deep_learning_model.h5")
+scaler = joblib.load("scaler.pkl")
 label_encoder = joblib.load("label_encoder.pkl")
 
-@app.route("/")
-def home():
-    return jsonify({"message": "Gene Expression Prediction API is running!"})
-
+# Predict with Deep Learning Model
 @app.route("/predict", methods=["POST"])
 def predict():
+    token = request.headers.get("Authorization")
+    if not token:
+        return jsonify({"error": "Missing authentication token"}), 401
+
     try:
-        if "file" in request.files:  # Check if a file is uploaded
-            file = request.files["file"]
-            df = pd.read_csv(file)
-            expression_values = df.values.tolist()
-        else:
-            data = request.get_json()
-            if not data or "expression_values" not in data:
-                return jsonify({"error": "Invalid input"}), 400
-            expression_values = [data["expression_values"]]
+        decoded_token = jwt.decode(token.split(" ")[1], app.config["SECRET_KEY"], algorithms=["HS256"])
+    except jwt.ExpiredSignatureError:
+        return jsonify({"error": "Token expired"}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
 
-        # Convert to DataFrame
-        gene_expression = pd.DataFrame(expression_values)
+    try:
+        data = request.get_json()
+        if not data or "expression_values" not in data:
+            return jsonify({"error": "Invalid input"}), 400
 
-        # Make predictions
-        rf_pred = rf_model.predict(gene_expression)[0]
-        svm_pred = svm_model.predict(gene_expression)[0]
+        expression_values = np.array(data["expression_values"]).reshape(1, -1)
+        scaled_values = scaler.transform(expression_values)
 
-        # Decode predictions
-        rf_result = label_encoder.inverse_transform([rf_pred])[0]
-        svm_result = label_encoder.inverse_transform([svm_pred])[0]
+        deep_pred = deep_model.predict(scaled_values)[0][0]
+        prediction_label = "Disease" if deep_pred >= 0.5 else "Normal"
 
         return jsonify({
-            "RandomForestPrediction": rf_result,
-            "SVM_Prediction": svm_result
+            "DeepLearningPrediction": prediction_label,
+            "Confidence": float(deep_pred)
         })
 
     except Exception as e:
