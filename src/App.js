@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
-import "bootstrap/dist/css/bootstrap.min.css";
+import { Container, TextField, Button, Typography, Paper, Grid, CircularProgress } from "@mui/material";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { Bar } from "react-chartjs-2";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from "chart.js";
 
@@ -34,12 +35,12 @@ function App() {
             if (file) {
                 const formData = new FormData();
                 formData.append("file", file);
-                response = await axios.post("http://127.0.0.1:8080/predict", formData, {
+                response = await axios.post("https://your-api.onrender.com/predict", formData, {
                     headers: { "Content-Type": "multipart/form-data" },
                 });
             } else {
                 const values = expressionValues.split(",").map(Number);
-                response = await axios.post("http://127.0.0.1:8080/predict", {
+                response = await axios.post("https://your-api.onrender.com/predict", {
                     expression_values: values,
                 });
             }
@@ -65,43 +66,67 @@ function App() {
     };
 
     return (
-        <div className="container mt-4">
-            <h2 className="mb-3">Gene Expression Disease Predictor</h2>
-            
-            <input
-                type="text"
-                className="form-control"
-                placeholder="Enter expression values, e.g. 1.2, 0.5, -0.8, 2.3"
-                value={expressionValues}
-                onChange={handleChange}
-                disabled={file !== null}
-            />
-            
-            <div className="mt-3">
-                <input type="file" className="form-control" onChange={handleFileChange} accept=".csv" />
-            </div>
+        <Container maxWidth="md" sx={{ mt: 5 }}>
+            <Paper elevation={3} sx={{ p: 4 }}>
+                <Typography variant="h4" gutterBottom align="center">
+                    Gene Expression Disease Predictor
+                </Typography>
 
-            <button className="btn btn-primary mt-3" onClick={handleSubmit} disabled={loading}>
-                {loading ? "Predicting..." : "Predict Disease"}
-            </button>
+                <Grid container spacing={2}>
+                    <Grid item xs={12}>
+                        <TextField
+                            fullWidth
+                            label="Enter Expression Values (comma-separated)"
+                            variant="outlined"
+                            value={expressionValues}
+                            onChange={handleChange}
+                            disabled={file !== null}
+                        />
+                    </Grid>
 
-            {error && <p className="text-danger mt-3">{error}</p>}
+                    <Grid item xs={12}>
+                        <Button
+                            variant="contained"
+                            component="label"
+                            startIcon={<CloudUploadIcon />}
+                            fullWidth
+                        >
+                            Upload CSV
+                            <input type="file" hidden onChange={handleFileChange} accept=".csv" />
+                        </Button>
+                    </Grid>
 
-            {prediction && (
-                <div className="mt-3">
-                    <h4>Prediction Results:</h4>
-                    <p><strong>Random Forest:</strong> {prediction.RandomForestPrediction}</p>
-                    <p><strong>SVM:</strong> {prediction.SVM_Prediction}</p>
-                </div>
-            )}
+                    <Grid item xs={12}>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={handleSubmit}
+                            fullWidth
+                            disabled={loading}
+                        >
+                            {loading ? <CircularProgress size={24} /> : "Predict Disease"}
+                        </Button>
+                    </Grid>
+                </Grid>
 
-            {chartData && (
-                <div className="mt-4">
-                    <h4>Gene Expression Data</h4>
-                    <Bar data={chartData} options={{ responsive: true, maintainAspectRatio: false }} />
-                </div>
-            )}
-        </div>
+                {error && <Typography color="error" sx={{ mt: 2 }}>{error}</Typography>}
+
+                {prediction && (
+                    <Paper elevation={2} sx={{ p: 3, mt: 3 }}>
+                        <Typography variant="h5">Prediction Results</Typography>
+                        <Typography><strong>Random Forest:</strong> {prediction.RandomForestPrediction}</Typography>
+                        <Typography><strong>SVM:</strong> {prediction.SVM_Prediction}</Typography>
+                    </Paper>
+                )}
+
+                {chartData && (
+                    <Paper elevation={2} sx={{ p: 3, mt: 3 }}>
+                        <Typography variant="h5">Gene Expression Data</Typography>
+                        <Bar data={chartData} options={{ responsive: true, maintainAspectRatio: false }} />
+                    </Paper>
+                )}
+            </Paper>
+        </Container>
     );
 }
 
