@@ -1,11 +1,9 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
-import { Table, TableHead, TableBody, TableRow, TableCell, TableContainer, Paper, Typography } from "@mui/material";
-import { TextField, Button, CircularProgress, Container } from "@mui/material";
-import { useCallback } from "react";
+import React, { useState } from "react";
+import { Container, TextField, Button, Typography, Paper, Grid, CircularProgress } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import axios from "axios";
 
-const API_URL = "https://gene-expression-analysis-no5o.onrender.com";
+const API_URL = "http://127.0.0.1:5000";
 
 function App() {
     const [username, setUsername] = useState("");
@@ -14,7 +12,7 @@ function App() {
     const [expressionValues, setExpressionValues] = useState("");
     const [prediction, setPrediction] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [setError] = useState(null);
+    const [error, setError] = useState(null);
     const [file, setFile] = useState(null);
 
     const handleAuth = async (endpoint) => {
@@ -68,25 +66,6 @@ function App() {
             setLoading(false);
         }
     };
-    const [history, setHistory] = useState([]);
-
-
-
-const fetchHistory = useCallback(async () => {
-    try {
-        const response = await axios.get(`${API_URL}/history`, {
-            headers: { Authorization: `Bearer ${token}` },
-        });
-        setHistory(response.data);
-    } catch (err) {
-        console.error("Error fetching history:", err);
-    }
-}, [token]);  // ✅ Now fetchHistory only updates when token changes
-
-useEffect(() => {
-    fetchHistory();
-}, [fetchHistory]);
-
 
     return (
         <Container maxWidth="md" sx={{ mt: 5 }}>
@@ -113,36 +92,6 @@ useEffect(() => {
                         {prediction && <Typography variant="h6">Prediction: {JSON.stringify(prediction)}</Typography>}
                     </>
                 )}
-<div>
-            <Typography variant="h5">Prediction History</Typography>
-
-            {history.length > 0 ? (
-                <TableContainer component={Paper}>
-                    <Table>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>Expression Values</TableCell>
-                                <TableCell>Random Forest</TableCell>
-                                <TableCell>SVM</TableCell>
-                                <TableCell>Date</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {history.map((entry, index) => (
-                                <TableRow key={index}>
-                                    <TableCell>{entry.expression_values}</TableCell>
-                                    <TableCell>{entry.RandomForestPrediction}</TableCell>
-                                    <TableCell>{entry.SVM_Prediction}</TableCell>
-                                    <TableCell>{entry.created_at}</TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-            ) : (
-                <Typography>No prediction history available.</Typography>
-            )}
-        </div>
             </Paper>
         </Container>
     );
