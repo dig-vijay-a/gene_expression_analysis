@@ -7,6 +7,8 @@ from tensorflow.keras.layers import Dense
 import os
 from sklearn.preprocessing import StandardScaler
 import joblib
+from absl import logging
+logging.set_verbosity(logging.ERROR)
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
@@ -35,7 +37,8 @@ model = Sequential([
     Dense(1, activation="sigmoid")  # Binary classification output
 ])
 
-model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
+model.compile(optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"])
+
 print("✅ Model compiled!")
 
 # ✅ Step 6: Train the model
