@@ -9,5 +9,5 @@ flask-jwt-extended
 flask-bcrypt
 psycopg2-binary
 flask-sqlalchemy
-tensorflow
+tenserflow[AVX2]
 keras
